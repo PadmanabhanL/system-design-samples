@@ -18,6 +18,6 @@ public class MergeAndCompactionService {
     public void mergeAndCompact() {
         Timer timer = new Timer();
         TimerTask mergeTask = new MergeAndCompactionTask(fileRotationService, indexService);
-        timer.schedule(mergeTask, 10000, 1);
+        timer.schedule(mergeTask, 10000);
     }
 }

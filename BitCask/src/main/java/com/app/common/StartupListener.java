@@ -40,42 +40,4 @@ public class StartupListener {
         return properties;
     }
 
-    public static String getFileName() {
-        return fileName;
-    }
-
-    public static void setFileName(String fileName) {
-        StartupListener.fileName = fileName;
-    }
-
-    public static int getCounter() {
-        return counter;
-    }
-
-    public static void setCounter(int counter) {
-        StartupListener.counter = counter;
-    }
-
-    public static void rotateFile() {
-        counter = counter + 1;
-        String filePrefix = (String) properties.get("file-name-prefix");
-        filePath = properties.getProperty("storage-path");
-        appendOnlyFile = new File(filePath + filePrefix + counter + ".log");
-    }
-
-    public static File getAppendOnlyFile() {
-        return appendOnlyFile;
-    }
-
-    public static String getFilePath() {
-        return filePath;
-    }
-
-    public static void addFile(File file) {
-        fileList.add(file);
-    }
-
-    public static List<File> getFileList() {
-        return fileList;
-    }
 }

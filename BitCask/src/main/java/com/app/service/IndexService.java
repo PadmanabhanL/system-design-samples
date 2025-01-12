@@ -1,15 +1,14 @@
 package com.app.service;
 
-import com.app.index.bo.ValueMetadata;
+import com.app.index.bo.KeyValueMetadata;
 
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class IndexService {
 
-    private final Map<String, ValueMetadata> index;
+    private final Map<String, KeyValueMetadata> index;
 
     private final FileRotationService fileRotationService;
 
@@ -18,7 +17,7 @@ public class IndexService {
         this.fileRotationService = fileRotationService;
     }
 
-    public Map<String, ValueMetadata> getIndex() {
+    public Map<String, KeyValueMetadata> getIndex() {
         return this.index;
     }
 
@@ -28,16 +27,15 @@ public class IndexService {
         }
         long startTime = System.currentTimeMillis();
         try {
-            ValueMetadata valueMetadata = index.get(key);
+            KeyValueMetadata valueMetadata = index.get(key);
             RandomAccessFile randomAccessFile = new RandomAccessFile(fileRotationService.getFilePath() + valueMetadata.getFileName(), "r");
 
-            randomAccessFile.seek(valueMetadata.getByteOffset());
-            byte[] buffer = new byte[valueMetadata.getByteLength()];
+            randomAccessFile.seek(valueMetadata.getValueByteOffset());
+            byte[] buffer = new byte[valueMetadata.getValueByteLength()];
 
             randomAccessFile.read(buffer);
 
-            String kvPair = new String(buffer);
-            return kvPair.isEmpty() ? "" : kvPair.split("\\,")[1];
+            return new String(buffer);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

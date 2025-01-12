@@ -1,7 +1,6 @@
 package com.app.service;
 
-import com.app.common.StartupListener;
-import com.app.index.bo.ValueMetadata;
+import com.app.index.bo.KeyValueMetadata;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,6 +23,7 @@ public class MergeAndCompactionTask extends TimerTask {
     @Override
     public void run() {
 
+        long startTime = System.currentTimeMillis();
         Set<File> fileList = new HashSet<>(fileRotationService.getFiles());
 
         for (File file: fileList) {
@@ -37,23 +37,25 @@ public class MergeAndCompactionTask extends TimerTask {
                     String kvPair = scanner.nextLine();
                     String[] kvPairArr = kvPair.split("\\,");
                     String key = kvPairArr[0];
-                    if (!indexService .getIndex().containsKey(key)) {
+                    if (!indexService.getIndex().containsKey(key)) {
                         continue; //SKIP This data as this item may have been deleted
                     }
                     String valueFromIndex = indexService.findValueByKey(key);
                     //FIXME Needs to fix the logic while using RandomAccessFile
                     valueFromIndex = valueFromIndex.replace("\n", "");
                     if (kvPairArr[1].equals(valueFromIndex)) {
-                        Map<String, Object> map = fileRotationService.saveAndRotate(key, kvPairArr[1], true);
-                        indexService.getIndex().put(key, new ValueMetadata((String) map.get("fileName"),
-                                                                           (int) map.get("byteOffset"),
-                                                                           (int) map.get("byteLength")));
+                        KeyValueMetadata kvMetadata = fileRotationService.saveAndRotate(key, kvPairArr[1], true);
+                        indexService.getIndex().put(key, kvMetadata);
                     }
                 }
                 filesToBeRemoved.add(file);
             } catch (FileNotFoundException e) {
             }
         }
+
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("Time taken to Compact and merge "+ filesToBeRemoved.size() + " " + (endTime - startTime) + "ms");
 
         /*for (File file: filesToBeRemoved) {
             file.renameTo(new File(""));

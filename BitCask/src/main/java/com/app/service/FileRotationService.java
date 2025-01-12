@@ -1,11 +1,14 @@
 package com.app.service;
 
 import com.app.common.StartupListener;
+import com.app.index.bo.KeyValueMetadata;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.Properties;
+import java.util.Set;
 
 public class FileRotationService {
 
@@ -34,45 +37,64 @@ public class FileRotationService {
         this.files = new LinkedHashSet<>();
     }
 
-    public Map<String, Object> saveAndRotate(String key, String value, boolean mergeAndCompactFlag) {
+    public KeyValueMetadata saveAndRotate(String key, String value, boolean mergeAndCompactFlag) {
 
         File targetFile = appendOnlyFile;
 
         if (mergeAndCompactFlag) {
-            counter = (counter * 10) + 1;
             if (mergeFile == null) {
+                counter = (counter * 10) + 1;
                 mergeFile = new File(filePath + filePrefix + counter + ".log");
+                totalBytesSize = 0;
             }
             targetFile = mergeFile;
         }
         String tempFileName = targetFile.getName();
 
-        int currentByteOffset = totalBytesSize;
+        int keyByteOffset = totalBytesSize;
 
-        int currentByteLength = 0;
+        int keyByteLength = 0;
+
+        int valueByteOffset = 0;
+
+        int valueByteLength = 0;
 
         try {
             FileWriter fileWriter = new FileWriter(targetFile, true);
-            String keyValue = key + "," + value + "\n";
-            currentByteLength += keyValue.getBytes().length;
-            totalBytesSize += currentByteLength;
-            fileWriter.write(keyValue);
+            keyByteLength += key.getBytes().length;
+
+            totalBytesSize += keyByteLength;
+
+            totalBytesSize += ",".getBytes().length;
+
+            valueByteOffset = totalBytesSize;
+
+            valueByteLength = value.getBytes().length;
+
+            totalBytesSize += valueByteLength;
+
+            totalBytesSize += "\n".getBytes().length;
+
+            fileWriter.write(key + "," + value + "\n");
             fileWriter.close();
 
             int maxFileSize = Integer.parseInt((String) properties.get("max-file-size-in-mb"));
-            if ((totalBytesSize / (1024 * 1)) >= maxFileSize) {
+            if ((totalBytesSize / (1024 * 1024)) >= maxFileSize) {
                 counter = counter + 1;
                 files.add(targetFile);
                 targetFile = new File(filePath + filePrefix + counter + ".log");
-                appendOnlyFile = targetFile;
+                if (mergeAndCompactFlag) {
+                    mergeFile = targetFile;
+                } else {
+                    appendOnlyFile = targetFile;
+                }
                 totalBytesSize = 0;
             }
 
         } catch (IOException ignored) {
         }
 
-        return Map.of("fileName", tempFileName,"byteOffset",
-                      currentByteOffset, "byteLength", currentByteLength);
+        return new KeyValueMetadata(tempFileName, keyByteOffset, keyByteLength, valueByteOffset, valueByteLength);
 
     }
 
