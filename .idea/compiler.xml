@@ -10,6 +10,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="BitCask" />
+        <module name="bitcask" />
+        <module name="consistent-hashing" />
       </profile>
     </annotationProcessing>
   </component>
