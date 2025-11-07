@@ -32,7 +32,7 @@ public class ClientApp {
         consistentHashingService.addNode(node2);
         consistentHashingService.addNode(node3);
         consistentHashingService.addNode(node4);
-        consistentHashingService.addNode(node5);
+       // consistentHashingService.addNode(node5);
 
         Node[] ringBuffer = consistentHashingService.getRingBuffer();
         for (int i = 0; i < ringBuffer.length; i++) {
@@ -41,13 +41,13 @@ public class ClientApp {
         }
 
         List<User> users = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 25; i++) {
             List<UserData> userDataList = new ArrayList<>();
             for (int j = 0; j < 5; j++) {
                 UserData userData = new UserData(UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
                 userDataList.add(userData);
             }
-            User user = new User("User"+i, userDataList);
+            User user = new User("User"+i, userDataList, true);
             users.add(user);
         }
 
@@ -56,12 +56,25 @@ public class ClientApp {
         }
 
         for (Node node : nodes) {
-            System.out.println(node.nodeName());
+            System.out.println(node.nodeName() + " UserCount:" + node.findAll().size());
             System.out.println("=================================================");
             for (User user : node.users()) {
-                System.out.println(user.userId());
+                System.out.println(user.getUserId());
+            }
+            System.out.println("--------------------------------------------------");
+        }
+
+        consistentHashingService.addFreshNode(node5);
+
+        for (Node node : nodes) {
+            System.out.println(node.nodeName() + " UserCount:" + node.findAll().size());
+            System.out.println("=================================================");
+            for (User user : node.users()) {
+                System.out.println(user.getUserId());
             }
             System.out.println("--------------------------------------------------");
         }
     }
+
+
 }

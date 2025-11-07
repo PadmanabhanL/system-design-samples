@@ -4,9 +4,12 @@ import com.system.bo.Node;
 import com.system.bo.User;
 import com.system.hashing.function.HashingFunctionFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ConsistentHashingService {
 
-    public static final int LIMIT = 25;//0_000_00;
+    public static final int LIMIT = 1000;//0_000_00;
 
     private final Node[] ringBuffer;
 
@@ -32,14 +35,15 @@ public class ConsistentHashingService {
 
     public void addUser(User user) {
         hashingFunctionFactory.getHashingFunctions().forEach(hashingFunction -> {
-            int hash = hashingFunction.hash(user.userId());
-            System.out.println("Hash for User "+ user.userId()+ " is "+hash);
+            int hash = hashingFunction.hash(user.getUserId());
+         //   System.out.println("Hash for User "+ user.getUserId()+ " is "+hash);
             if (ringBuffer[hash] == null) {
                 for (int i = hash; i < ringBuffer.length; i++) {
                     Node node = ringBuffer[i];
                     if (node != null) {
-                        System.out.println("Adding User :" + user.userId() + " to Node " + node.nodeName());
+                      //  System.out.println("Adding User :" + user.getUserId() + " to Node " + node.nodeName());
                         node.add(user);
+                        user.addHashes(hash);
                         break;
                     }
                     if (i == ringBuffer.length - 1) {
@@ -48,8 +52,42 @@ public class ConsistentHashingService {
                 }
             } else {
                 ringBuffer[hash].add(user);
-                System.out.println("Adding User :" + user.userId() + " to Node " + ringBuffer[hash].nodeName());
+                user.addHashes(hash);
+              //  System.out.println("Adding User :" + user.getUserId() + " to Node " + ringBuffer[hash].nodeName());
             }
+        });
+    }
+
+    public void addFreshNode(Node node) {
+        hashingFunctionFactory.getHashingFunctions().forEach(hashingFunction -> {
+           int nodeHash = hashingFunction.hash(node.nodeId());
+
+           int hash = nodeHash;
+           System.out.println("Assigning Node "+node.nodeName()+" to hash "+hash);
+           ringBuffer[hash] = node;
+
+           while (ringBuffer[++hash] == null) {
+               //simply traverse
+               if (hash == ringBuffer.length - 1) {
+                   hash = 0;
+               }
+           }
+           Node nextNode = ringBuffer[hash];
+           List<User> usersToBeRemoved = new ArrayList<>();
+            if (nextNode != null) {
+                System.out.println("Target Node:" + nextNode.nodeName());
+                for (User user: nextNode.findAll()) {
+                   int userHash = hashingFunction.hash(user.getUserId());
+                    System.out.println("Hash for User "+ user.getUserId()+ " is "+userHash + " " + user.getHashes());
+                   if (nodeHash  > userHash && userHash < hash) {
+                       usersToBeRemoved.add(user);
+                       node.add(user);
+                   }
+               }
+
+               nextNode.remove(usersToBeRemoved);
+           }
+
         });
     }
 }

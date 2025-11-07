@@ -12,11 +12,15 @@ public record Node(String nodeId, String nodeName, List<User> users) {
     }
 
     public User find(String userId){
-        return users.stream().filter(user -> user.userId().equals(userId)).findFirst().orElse(null);
+        return users.stream().filter(user -> user.getUserId().equals(userId)).findFirst().orElse(null);
     }
 
     public List<User> findAll(){
         return users;
+    }
+
+    public void remove(List<User> usersToBeRemoved){
+        users.removeAll(usersToBeRemoved);
     }
 
 }
