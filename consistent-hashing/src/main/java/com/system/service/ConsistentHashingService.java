@@ -9,8 +9,6 @@ import java.util.List;
 
 public class ConsistentHashingService {
 
-    public static final int LIMIT = 1000;//0_000_00;
-
     private final Node[] ringBuffer;
 
     private final HashingFunctionFactory  hashingFunctionFactory;
@@ -25,7 +23,7 @@ public class ConsistentHashingService {
 
     public ConsistentHashingService() {
 
-        this.ringBuffer = new Node[LIMIT];
+        this.ringBuffer = new Node[AppConstants.RING_BUFFER_SIZE];
         this.hashingFunctionFactory = new HashingFunctionFactory();
     }
 
@@ -76,7 +74,8 @@ public class ConsistentHashingService {
            List<User> usersToBeRemoved = new ArrayList<>();
             if (nextNode != null) {
                 System.out.println("Target Node:" + nextNode.nodeName());
-                for (User user: nextNode.findAll()) {
+                List<User> users = new ArrayList<>(nextNode.findAll());
+                for (User user: users) {
                    int userHash = hashingFunction.hash(user.getUserId());
                     System.out.println("Hash for User "+ user.getUserId()+ " is "+userHash + " " + user.getHashes());
                    if (nodeHash  > userHash && userHash < hash) {
@@ -87,6 +86,28 @@ public class ConsistentHashingService {
 
                nextNode.remove(usersToBeRemoved);
            }
+
+        });
+    }
+
+
+    public void removeNode(Node node) {
+        hashingFunctionFactory.getHashingFunctions().forEach(hashingFunction -> {
+            int nodeHash = hashingFunction.hash(node.nodeId());
+
+            int hash = nodeHash;
+            System.out.println("Assigning Node "+node.nodeName()+" to hash "+hash);
+            ringBuffer[hash] = null;
+
+            while (ringBuffer[++hash] == null) {
+                //simply traverse
+                if (hash == ringBuffer.length - 1) {
+                    hash = 0;
+                }
+            }
+            Node nextNode = ringBuffer[hash];
+            nextNode.add(node.users());
+            node.remove(node.users());
 
         });
     }

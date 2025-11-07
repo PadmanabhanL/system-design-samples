@@ -23,4 +23,8 @@ public record Node(String nodeId, String nodeName, List<User> users) {
         users.removeAll(usersToBeRemoved);
     }
 
+    public void add(List<User> usersToBeAdded){
+        users.addAll(usersToBeAdded);
+    }
+
 }

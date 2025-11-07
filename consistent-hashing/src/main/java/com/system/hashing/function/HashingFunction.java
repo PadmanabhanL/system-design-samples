@@ -1,6 +1,6 @@
 package com.system.hashing.function;
 
-import static com.system.service.ConsistentHashingService.LIMIT;
+import com.system.service.AppConstants;
 
 public interface HashingFunction {
 
@@ -14,6 +14,6 @@ public interface HashingFunction {
 
         long unsignedValue = result & 0xFFFFFFFFL;
 
-        return (int) (unsignedValue % LIMIT);
+        return (int) (unsignedValue % AppConstants.RING_BUFFER_SIZE);
     }
 }
