@@ -10,27 +10,31 @@ public class StorageService {
 
     private final IndexService indexService;
 
-    private final FileRotationService fileRotationService;
+    private final FileWriterService fileWriterService;
 
     private final ExecutorService executorService;
 
+    private final FileRotationService fileRotationService;
+
     public StorageService() {
         this.fileRotationService = new FileRotationService();
-        this.indexService = new IndexService(fileRotationService);
+        this.fileWriterService = new FileWriterService(fileRotationService);
+        this.indexService = new IndexService();
         this.executorService = Executors.newSingleThreadExecutor();
     }
 
     public void save(String key, String value) {
-
         CompletableFuture.runAsync(() -> {
-            KeyValueMetadata keyValueMetadata = fileRotationService.saveAndRotate(key, value, false);
-
-            indexService.getIndex().put(key, keyValueMetadata);
-
-            if (value != null && value.equals("-1")) {
-                indexService.getIndex().remove(key);
-            }
+            doSave(key, value);
         }, executorService);
+    }
+
+    private void doSave(String key, String value) {
+        KeyValueMetadata keyValueMetadata = fileWriterService.saveAndRotate(key, value, this.fileRotationService.getAppendOnlyFile());
+        indexService.getIndex().put(key, keyValueMetadata);
+        if (value != null && value.equals("-1")) {
+            indexService.getIndex().remove(key);
+        }
     }
 
     public void delete(String key) {
@@ -49,5 +53,9 @@ public class StorageService {
 
     public IndexService getIndexService() {
         return indexService;
+    }
+
+    public FileWriterService getFileWriterService() {
+        return fileWriterService;
     }
 }

@@ -45,7 +45,9 @@ public class ClientApp {
 
         Node[] ringBuffer = consistentHashingService.getRingBuffer();
         for (int i = 0; i < ringBuffer.length; i++) {
-            System.out.println("Index " + i +" has Node "+ (ringBuffer[i] == null ? "UNASSIGNED" : ringBuffer[i].nodeName()));
+            if (ringBuffer[i] != null) {
+                System.out.println("Index " + i +" has Node "+ ringBuffer[i].nodeName());
+            }
 
         }
 
@@ -82,6 +84,24 @@ public class ClientApp {
         consistentHashingService.addFreshNode(node9);
 
         displayNodeStatus(nodes);
+
+        String userID = "User1";
+
+        System.out.println(userID + " can be found in:");
+        for (Node node : nodes) {
+            if (node.users().stream().filter(user -> user.getUserId().equals(userID)).findFirst().isPresent()) {
+                System.out.println("node :"+ node.nodeName());
+            }
+        }
+
+        for (int i = 0; i < ringBuffer.length; i++) {
+            if (ringBuffer[i] != null) {
+                System.out.println("Index " + i +" has Node "+ ringBuffer[i].nodeName());
+            }
+
+        }
+
+        System.out.println(consistentHashingService.findUserData(userID));
 
 
     }

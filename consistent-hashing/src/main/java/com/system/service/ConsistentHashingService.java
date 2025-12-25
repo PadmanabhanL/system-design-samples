@@ -2,6 +2,8 @@ package com.system.service;
 
 import com.system.bo.Node;
 import com.system.bo.User;
+import com.system.bo.UserData;
+import com.system.hashing.function.HashingFunction;
 import com.system.hashing.function.HashingFunctionFactory;
 
 import java.util.ArrayList;
@@ -110,5 +112,33 @@ public class ConsistentHashingService {
             node.remove(node.users());
 
         });
+    }
+
+    public List<UserData> findUserData(String userId) {
+        List<UserData> userDatas = new ArrayList<>();
+        for (HashingFunction hashingFunction:  hashingFunctionFactory.getHashingFunctions()) {
+            int hash = hashingFunction.hash(userId);
+            if (ringBuffer[hash] != null) {
+                Node node = ringBuffer[hash];
+                User user = node.find(userId);
+                userDatas = user.getUserData();
+                break;
+            } else {
+                while (ringBuffer[++hash] == null) {
+                    //simply traverse
+                    if (hash == ringBuffer.length - 1) {
+                        hash = 0;
+                    }
+                }
+                Node nextNode = ringBuffer[hash];
+                User user = nextNode.find(userId);
+                if (user == null) {
+                    throw new RuntimeException("User Not Found: " + userId + " Node Chosen "+ nextNode.nodeName() + "hash " + hash);
+                }
+                userDatas = user.getUserData();
+                break;
+            }
+        }
+        return userDatas;
     }
 }

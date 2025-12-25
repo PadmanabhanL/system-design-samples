@@ -6,17 +6,17 @@ public class KeyValueMetadata {
 
     private long keyByteOffset;
 
-    private int keyByteLength;
+    private long keyByteLength;
 
     private long valueByteOffset;
 
-    private int valueByteLength;
+    private long valueByteLength;
 
     public KeyValueMetadata(String fileName,
                             long keyByteOffset,
-                            int keyByteLength,
+                            long keyByteLength,
                             long valueByteOffset,
-                            int valueByteLength) {
+                            long valueByteLength) {
         this.fileName = fileName;
         this.keyByteOffset = keyByteOffset;
         this.keyByteLength = keyByteLength;
@@ -41,7 +41,7 @@ public class KeyValueMetadata {
         this.keyByteOffset = keyByteOffset;
     }
 
-    public int getKeyByteLength() {
+    public long getKeyByteLength() {
         return keyByteLength;
     }
 
@@ -57,11 +57,16 @@ public class KeyValueMetadata {
         this.valueByteOffset = valueByteOffset;
     }
 
-    public int getValueByteLength() {
+    public long getValueByteLength() {
         return valueByteLength;
     }
 
     public void setValueByteLength(int valueByteLength) {
         this.valueByteLength = valueByteLength;
+    }
+
+    @Override
+    public String toString() {
+        return "{" + this.fileName + " " + this.keyByteOffset + " " + this.keyByteLength + " " + this.valueByteOffset + " " + this.valueByteLength + "}";
     }
 }

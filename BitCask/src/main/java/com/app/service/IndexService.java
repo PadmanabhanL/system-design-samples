@@ -1,20 +1,22 @@
 package com.app.service;
 
+import com.app.common.StartupListener;
 import com.app.index.bo.KeyValueMetadata;
 
 import java.io.RandomAccessFile;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class IndexService {
 
     private final Map<String, KeyValueMetadata> index;
 
-    private final FileRotationService fileRotationService;
+    private final Properties properties;
 
-    public IndexService(FileRotationService fileRotationService) {
+    public IndexService() {
         this.index = new ConcurrentHashMap<>();
-        this.fileRotationService = fileRotationService;
+        this.properties = StartupListener.getProperties();
     }
 
     public Map<String, KeyValueMetadata> getIndex() {
@@ -22,25 +24,26 @@ public class IndexService {
     }
 
     public String findValueByKey(String key) {
-        if (!index.containsKey(key)) {
+        if (!this.index.containsKey(key)) {
             return "Unable to find value";
         }
         long startTime = System.currentTimeMillis();
         try {
-            KeyValueMetadata valueMetadata = index.get(key);
-            RandomAccessFile randomAccessFile = new RandomAccessFile(fileRotationService.getFilePath() + valueMetadata.getFileName(), "r");
+            KeyValueMetadata valueMetadata = this.index.get(key);
+            RandomAccessFile randomAccessFile = new RandomAccessFile(properties.getProperty("storage-path") + valueMetadata.getFileName(), "r");
 
             randomAccessFile.seek(valueMetadata.getValueByteOffset());
-            byte[] buffer = new byte[valueMetadata.getValueByteLength()];
+            byte[] buffer = new byte[Math.toIntExact(valueMetadata.getValueByteLength())];
 
             randomAccessFile.read(buffer);
 
-            return new String(buffer);
+            String value = new String(buffer);
+            return value;
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             long endTime = System.currentTimeMillis();
-            System.out.println("Time Taken to Find:" + (endTime - startTime) + "ms");
+            //System.out.println("Time Taken to Find:" + (endTime - startTime) + "ms");
         }
     }
 }

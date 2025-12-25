@@ -6,6 +6,9 @@
       <list>
         <option value="$PROJECT_DIR$/BitCask/pom.xml" />
         <option value="$PROJECT_DIR$/consistent-hashing/pom.xml" />
+        <option value="$PROJECT_DIR$/caching-mechanisms/pom.xml" />
+        <option value="$PROJECT_DIR$/leetcode-contest/pom.xml" />
+        <option value="$PROJECT_DIR$/in-mem-database/pom.xml" />
       </list>
     </option>
   </component>

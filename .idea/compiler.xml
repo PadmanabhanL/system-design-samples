@@ -11,6 +11,9 @@
         <outputRelativeToContentRoot value="true" />
         <module name="BitCask" />
         <module name="bitcask" />
+        <module name="caching-mechanisms" />
+        <module name="in-mem-database" />
+        <module name="leetcode-contest" />
         <module name="consistent-hashing" />
       </profile>
     </annotationProcessing>

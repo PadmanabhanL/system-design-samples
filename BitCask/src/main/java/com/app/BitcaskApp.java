@@ -1,8 +1,6 @@
 package com.app;
 
-import com.app.service.IndexService;
-import com.app.service.MergeAndCompactionService;
-import com.app.service.StorageService;
+import com.app.service.*;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,24 +31,6 @@ public class BitcaskApp {
         }
 
         app.initiateMergeAndCompaction(service);
-
-        IndexService indexService = service.getIndexService();
-        indexService.getIndex().forEach((key, v) -> {
-            System.out.println(key + " "+indexService.findValueByKey(key));
-        });
-
-
-        /*System.out.println(service.getIndexService().getIndex().get("key0"));
-
-        System.out.println(service.find("key0"));*/
-
-
-
-      /*  while (true) {
-
-        }*/
-       // service.delete("key988");
-
     }
 
     private void initiateMergeAndCompaction(StorageService service) {
@@ -59,8 +39,12 @@ public class BitcaskApp {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        MergeAndCompactionService mergeAndCompactionService = new MergeAndCompactionService(service.getFileRotationService(),
-                                                                                            service.getIndexService());
+        FileRotationService fileRotationService = service.getFileRotationService();
+        IndexService indexService = service.getIndexService();
+        FileWriterService fileWriterService = service.getFileWriterService();
+        System.out.println("Hash For FileRotationService: " + fileRotationService);
+        MergeAndCompactionService mergeAndCompactionService = new MergeAndCompactionService(fileRotationService,
+                indexService, fileWriterService);
         mergeAndCompactionService.mergeAndCompact();
     }
 }
