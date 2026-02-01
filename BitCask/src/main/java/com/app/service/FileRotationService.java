@@ -20,6 +20,8 @@ public class FileRotationService {
 
     private final AtomicInteger counter = new AtomicInteger(1);
 
+    private final AtomicInteger mergeCounter = new AtomicInteger(1);
+
     private File appendOnlyFile;
 
     private final String filePath;
@@ -49,9 +51,9 @@ public class FileRotationService {
     }
 
     public void mergeRotation(File currentFile) {
-        counter.addAndGet(1);
+        mergeCounter.addAndGet(1);
         this.getFiles().add(currentFile);
-        this.mergeFile = new File(getFilePath() + getFilePrefix()  + "_merge_"+  counter.get() + ".log");
+        this.mergeFile = new File(getFilePath() + getFilePrefix()  + "_merge_"+  mergeCounter.get() + ".log");
         this.totalMergeFileBytesSize.set(0);
     }
 

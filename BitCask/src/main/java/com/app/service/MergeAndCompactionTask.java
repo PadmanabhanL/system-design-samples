@@ -16,11 +16,14 @@ public class MergeAndCompactionTask extends TimerTask {
 
     private final Set<File> filesToBeRemoved;
 
+    private final Set<String> processedKeys;
+
     public MergeAndCompactionTask(FileRotationService fileRotationService, FileWriterService fileWriterService, IndexService indexService) {
         this.fileRotationService = fileRotationService;
         this.fileWriterService = fileWriterService;
         this.indexService = indexService;
         this.filesToBeRemoved = new HashSet<>();
+        this.processedKeys = new HashSet<>();
     }
 
     @Override
@@ -30,7 +33,6 @@ public class MergeAndCompactionTask extends TimerTask {
         for (File file: fileList) {
             if (filesToBeRemoved.contains(file)
                 || fileRotationService.getMergeFile() != null && fileRotationService.getMergeFile().getName().equals(file.getName())) {
-                System.out.println("Continuing...");
                 continue;
             }
             try {
@@ -38,23 +40,22 @@ public class MergeAndCompactionTask extends TimerTask {
                 while (scanner.hasNextLine()) {
                     String kvPair = scanner.nextLine();
                     String[] kvPairArr = kvPair.split("\\,");
-                    String key = kvPairArr[0];
-                    if (!indexService.getIndex().containsKey(key)) {
-                        System.out.println("Item deleted");
-                        continue; //SKIP This data as this item may have been deleted
+                    String key = kvPairArr[2];      // Correct index for key
+                    
+                    // Skip if already processed in this compaction cycle or if key was deleted
+                    if (processedKeys.contains(key) || !indexService.getIndex().containsKey(key)) {
+                        continue;
                     }
-                    String valueFromIndex = indexService.findValueByKey(key);
-                    //FIXME Needs to fix the logic while using RandomAccessFile
-                   // valueFromIndex = valueFromIndex.replace("\n", "");
-                    if (kvPairArr[1].equals(valueFromIndex)) {
-                        System.out.println("calling from merge task");
-                        KeyValueMetadata kvMetadata = fileWriterService.saveAndRotateForMerge(key, kvPairArr[1], fileRotationService.getMergeFile());
-                        indexService.getIndex().put(key, kvMetadata);
-                    } else {
-                       // System.out.println("Value not matching " + kvPairArr[1] + " " + valueFromIndex + indexService.getIndex().get(key));
-                    }
+                    
+                    // Get the CURRENT value from index (not from file) to avoid race conditions
+                    String currentValue = indexService.findValueByKey(key);
+                    
+                    // Write to merge file and update index
+                    KeyValueMetadata kvMetadata = fileWriterService.saveAndRotateForMerge(key, currentValue);
+                    indexService.getIndex().put(key, kvMetadata);
+                    processedKeys.add(key);
                 }
-                System.out.println("adding file to be removed");
+                scanner.close();
                 filesToBeRemoved.add(file);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -63,6 +64,6 @@ public class MergeAndCompactionTask extends TimerTask {
 
         long endTime = System.currentTimeMillis();
 
-        System.out.println("Time taken to Compact and merge "+ filesToBeRemoved.size() + " "  + (fileRotationService.getMergeFile() != null ? fileRotationService.getMergeFile().getName() : "NULL Merge file")+ " " + (endTime - startTime) + "ms");
+        System.out.println("Time taken to Compact and merge "+ filesToBeRemoved.size() + " files, processed " + processedKeys.size() + " keys. "  + (fileRotationService.getMergeFile() != null ? fileRotationService.getMergeFile().getName() : "NULL Merge file")+ " " + (endTime - startTime) + "ms");
     }
 }

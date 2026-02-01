@@ -4,6 +4,14 @@ public class KeyValueMetadata {
 
     private String fileName;
 
+    private long checksumOffset;
+
+    private long checksumSize;
+
+    private long timestampOffset;
+
+    private long timestampSize;
+
     private long keyByteOffset;
 
     private long keyByteLength;
@@ -12,18 +20,17 @@ public class KeyValueMetadata {
 
     private long valueByteLength;
 
-    public KeyValueMetadata(String fileName,
-                            long keyByteOffset,
-                            long keyByteLength,
-                            long valueByteOffset,
-                            long valueByteLength) {
+    public KeyValueMetadata(String fileName, long checksumOffset, long checksumSize, long timestampOffset, long timestampSize, long keyByteOffset, long keyByteLength, long valueByteOffset, long valueByteLength) {
         this.fileName = fileName;
+        this.checksumOffset = checksumOffset;
+        this.checksumSize = checksumSize;
+        this.timestampOffset = timestampOffset;
+        this.timestampSize = timestampSize;
         this.keyByteOffset = keyByteOffset;
         this.keyByteLength = keyByteLength;
         this.valueByteOffset = valueByteOffset;
         this.valueByteLength = valueByteLength;
     }
-
 
     public String getFileName() {
         return fileName;

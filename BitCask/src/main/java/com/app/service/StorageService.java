@@ -5,6 +5,7 @@ import com.app.index.bo.KeyValueMetadata;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.Checksum;
 
 public class StorageService {
 
@@ -16,11 +17,14 @@ public class StorageService {
 
     private final FileRotationService fileRotationService;
 
+    private final Checksum crcFactory;
+
     public StorageService() {
         this.fileRotationService = new FileRotationService();
         this.fileWriterService = new FileWriterService(fileRotationService);
         this.indexService = new IndexService();
         this.executorService = Executors.newSingleThreadExecutor();
+        this.crcFactory = CrcFactory.create(CrcType.CRC32C);
     }
 
     public void save(String key, String value) {
@@ -30,7 +34,7 @@ public class StorageService {
     }
 
     private void doSave(String key, String value) {
-        KeyValueMetadata keyValueMetadata = fileWriterService.saveAndRotate(key, value, this.fileRotationService.getAppendOnlyFile());
+        KeyValueMetadata keyValueMetadata = fileWriterService.saveAndRotate(key, value);
         indexService.getIndex().put(key, keyValueMetadata);
         if (value != null && value.equals("-1")) {
             indexService.getIndex().remove(key);
